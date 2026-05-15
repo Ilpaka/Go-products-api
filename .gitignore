@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Go build artefacts
+/server
+/cmd/server/server
+*.test
+*.out
+
+# IDE
+.idea/
+.vscode/
