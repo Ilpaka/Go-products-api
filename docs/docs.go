@@ -40,7 +40,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.Products"
+                            "$ref": "#/definitions/model.Products"
                         }
                     }
                 ],
@@ -48,13 +48,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created product",
                         "schema": {
-                            "$ref": "#/definitions/main.Products"
+                            "$ref": "#/definitions/model.Products"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/main.ErrorResponse"
+                            "$ref": "#/definitions/model.ErrorResponse"
                         }
                     }
                 }
@@ -74,13 +74,13 @@ const docTemplate = `{
                     "200": {
                         "description": "JWT token",
                         "schema": {
-                            "$ref": "#/definitions/main.TokenResponse"
+                            "$ref": "#/definitions/model.TokenResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.ErrorResponse"
+                            "$ref": "#/definitions/model.ErrorResponse"
                         }
                     }
                 }
@@ -127,14 +127,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.Products"
+                                "$ref": "#/definitions/model.Products"
                             }
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/main.ErrorResponse"
+                            "$ref": "#/definitions/model.ErrorResponse"
                         }
                     }
                 }
@@ -168,13 +168,13 @@ const docTemplate = `{
                     "200": {
                         "description": "Product",
                         "schema": {
-                            "$ref": "#/definitions/main.Products"
+                            "$ref": "#/definitions/model.Products"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/main.ErrorResponse"
+                            "$ref": "#/definitions/model.ErrorResponse"
                         }
                     }
                 }
@@ -210,7 +210,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.Products"
+                            "$ref": "#/definitions/model.Products"
                         }
                     }
                 ],
@@ -218,19 +218,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Updated product",
                         "schema": {
-                            "$ref": "#/definitions/main.Products"
+                            "$ref": "#/definitions/model.Products"
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.ErrorResponse"
+                            "$ref": "#/definitions/model.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Product not found",
                         "schema": {
-                            "$ref": "#/definitions/main.ErrorResponse"
+                            "$ref": "#/definitions/model.ErrorResponse"
                         }
                     }
                 }
@@ -269,13 +269,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/main.ErrorResponse"
+                            "$ref": "#/definitions/model.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Product not found",
                         "schema": {
-                            "$ref": "#/definitions/main.ErrorResponse"
+                            "$ref": "#/definitions/model.ErrorResponse"
                         }
                     }
                 }
@@ -283,7 +283,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "main.ErrorResponse": {
+        "model.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -291,7 +291,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.Products": {
+        "model.Products": {
             "type": "object",
             "properties": {
                 "id": {
@@ -308,13 +308,21 @@ const docTemplate = `{
                 }
             }
         },
-        "main.TokenResponse": {
+        "model.TokenResponse": {
             "type": "object",
             "properties": {
                 "token": {
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer {token}\" to authorize.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
@@ -325,8 +333,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8090",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "PRoducts API KR_17_03",
-	Description:      "JWT token",
+	Title:            "Products API KR_17_03",
+	Description:      "Simple CRUD API for Products with JWT auth.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

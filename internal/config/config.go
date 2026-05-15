@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"log"
@@ -7,17 +7,15 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type Settings struct {
+type Config struct {
 	JwtSecret string
 }
 
-var settings *Settings
-
-func init() {
+func Load() *Config {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Printf("warning: .env not loaded: %v", err)
 	}
-	settings = &Settings{
+	return &Config{
 		JwtSecret: os.Getenv("JWT_SECRET"),
 	}
 }

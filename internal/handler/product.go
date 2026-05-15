@@ -1,56 +1,22 @@
-package main
+package handler
 
 import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 
-	_ "makarov_project/docs"
+	"makarov_project/internal/model"
+	"makarov_project/internal/service"
 )
 
-func setupRouter() *gin.Engine {
-	r := gin.Default()
-
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	r.POST("/auth/token", handleAuthToken)
-
-	api := r.Group("").Use(authMiddleware())
-	{
-		api.GET("/products", handleGetProducts)
-		api.GET("/products/:id", handleGetProductByID)
-		api.POST("/add_products", handleCreateProduct)
-		api.PUT("/products/:id", handleUpdateProduct)
-		api.DELETE("/products/:id", handleDeleteProduct)
-	}
-
-	return r
+type ProductHandler struct {
+	svc *service.ProductService
 }
 
-// @Summary Get JWT token
-// @Description.markdown auth_token
-// @Tags Auth
-// @Produce json
-// @Success 200 {object} TokenResponse "JWT token"
-// @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /auth/token [post]
-func handleAuthToken(c *gin.Context) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
-		"iat": time.Now().Unix(),
-	})
-	signed, err := token.SignedString([]byte(settings.JwtSecret))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"token": signed})
+func NewProductHandler(svc *service.ProductService) *ProductHandler {
+	return &ProductHandler{svc: svc}
 }
 
 // @Summary Handler Get Products with filters: min, max, in_stock
@@ -61,11 +27,11 @@ func handleAuthToken(c *gin.Context) {
 // @Param min_price query int false "Minimum price filter"
 // @Param max_price query int false "Maximum price filter"
 // @Param in_stock query bool false "Filter by stock availability"
-// @Success 200 {object} []main.Products "List of products"
-// @Failure 404 {object} ErrorResponse "Not Found"
+// @Success 200 {object} []model.Products "List of products"
+// @Failure 404 {object} model.ErrorResponse "Not Found"
 // @Router /products [get]
-func handleGetProducts(c *gin.Context) {
-	var filter ProductFilter
+func (h *ProductHandler) List(c *gin.Context) {
+	var filter service.ProductFilter
 
 	if s := c.Query("min_price"); s != "" {
 		v, err := strconv.Atoi(s)
@@ -88,9 +54,9 @@ func handleGetProducts(c *gin.Context) {
 		return
 	}
 
-	filter.InStock = parseInStock(c.Query("in_stock"))
+	filter.InStock = service.ParseInStock(c.Query("in_stock"))
 
-	c.JSON(http.StatusOK, gin.H{"data": serviceGetAll(filter)})
+	c.JSON(http.StatusOK, gin.H{"data": h.svc.GetAll(filter)})
 }
 
 // @Summary Handler Get Products by id
@@ -99,17 +65,17 @@ func handleGetProducts(c *gin.Context) {
 // @Tags Products
 // @Produce json
 // @Param id path int true "Product ID"
-// @Success 200 {object} main.Products "Product"
-// @Failure 404 {object} ErrorResponse "Not Found"
+// @Success 200 {object} model.Products "Product"
+// @Failure 404 {object} model.ErrorResponse "Not Found"
 // @Router /products/{id} [get]
-func handleGetProductByID(c *gin.Context) {
+func (h *ProductHandler) Get(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат id"})
 		return
 	}
 
-	p := serviceGetByID(id)
+	p := h.svc.GetByID(id)
 	if p == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Продукт не найден"})
 		return
@@ -120,22 +86,22 @@ func handleGetProductByID(c *gin.Context) {
 
 // @Summary Post Handler add_products
 // @Security BearerAuth
-// @Description.markdown post_products.md
+// @Description.markdown post_products
 // @Tags Products
 // @Accept json
 // @Produce json
-// @Param product body main.Products true "Product data"
-// @Success 201 {object} main.Products "Created product"
-// @Failure 404 {object} ErrorResponse "Not Found"
+// @Param product body model.Products true "Product data"
+// @Success 201 {object} model.Products "Created product"
+// @Failure 404 {object} model.ErrorResponse "Not Found"
 // @Router /add_products [post]
-func handleCreateProduct(c *gin.Context) {
-	var p Products
+func (h *ProductHandler) Create(c *gin.Context) {
+	var p model.Products
 	if err := c.ShouldBindJSON(&p); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, serviceCreate(p))
+	c.JSON(http.StatusCreated, h.svc.Create(p))
 }
 
 // @Summary Update product by id
@@ -145,25 +111,25 @@ func handleCreateProduct(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Product ID"
-// @Param product body main.Products true "Product data"
-// @Success 200 {object} main.Products "Updated product"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 404 {object} ErrorResponse "Product not found"
+// @Param product body model.Products true "Product data"
+// @Success 200 {object} model.Products "Updated product"
+// @Failure 400 {object} model.ErrorResponse "Bad request"
+// @Failure 404 {object} model.ErrorResponse "Product not found"
 // @Router /products/{id} [put]
-func handleUpdateProduct(c *gin.Context) {
+func (h *ProductHandler) Update(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат id"})
 		return
 	}
 
-	var p Products
+	var p model.Products
 	if err := c.ShouldBindJSON(&p); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	updated := serviceUpdate(id, p)
+	updated := h.svc.Update(id, p)
 	if updated == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Продукт не найден"})
 		return
@@ -179,17 +145,17 @@ func handleUpdateProduct(c *gin.Context) {
 // @Produce json
 // @Param id path int true "Product ID"
 // @Success 200 {object} map[string]interface{} "Deletion confirmation"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 404 {object} ErrorResponse "Product not found"
+// @Failure 400 {object} model.ErrorResponse "Bad request"
+// @Failure 404 {object} model.ErrorResponse "Product not found"
 // @Router /products/{id} [delete]
-func handleDeleteProduct(c *gin.Context) {
+func (h *ProductHandler) Delete(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат id"})
 		return
 	}
 
-	if !serviceDelete(id) {
+	if !h.svc.Delete(id) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Продукт не найден"})
 		return
 	}

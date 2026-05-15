@@ -1,10 +1,10 @@
 definitions:
-  main.ErrorResponse:
+  model.ErrorResponse:
     properties:
       error:
         type: string
     type: object
-  main.Products:
+  model.Products:
     properties:
       id:
         type: integer
@@ -15,7 +15,7 @@ definitions:
       price:
         type: integer
     type: object
-  main.TokenResponse:
+  model.TokenResponse:
     properties:
       token:
         type: string
@@ -23,8 +23,8 @@ definitions:
 host: localhost:8090
 info:
   contact: {}
-  description: JWT token
-  title: PRoducts API KR_17_03
+  description: Simple CRUD API for Products with JWT auth.
+  title: Products API KR_17_03
   version: "1.0"
 paths:
   /add_products:
@@ -41,18 +41,18 @@ paths:
         name: product
         required: true
         schema:
-          $ref: '#/definitions/main.Products'
+          $ref: '#/definitions/model.Products'
       produces:
       - application/json
       responses:
         "201":
           description: Created product
           schema:
-            $ref: '#/definitions/main.Products'
+            $ref: '#/definitions/model.Products'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/main.ErrorResponse'
+            $ref: '#/definitions/model.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Post Handler add_products
@@ -72,11 +72,11 @@ paths:
         "200":
           description: JWT token
           schema:
-            $ref: '#/definitions/main.TokenResponse'
+            $ref: '#/definitions/model.TokenResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/main.ErrorResponse'
+            $ref: '#/definitions/model.ErrorResponse'
       summary: Get JWT token
       tags:
       - Auth
@@ -115,12 +115,12 @@ paths:
           description: List of products
           schema:
             items:
-              $ref: '#/definitions/main.Products'
+              $ref: '#/definitions/model.Products'
             type: array
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/main.ErrorResponse'
+            $ref: '#/definitions/model.ErrorResponse'
       security:
       - BearerAuth: []
       summary: 'Handler Get Products with filters: min, max, in_stock'
@@ -151,11 +151,11 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/main.ErrorResponse'
+            $ref: '#/definitions/model.ErrorResponse'
         "404":
           description: Product not found
           schema:
-            $ref: '#/definitions/main.ErrorResponse'
+            $ref: '#/definitions/model.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete product by id
@@ -180,11 +180,11 @@ paths:
         "200":
           description: Product
           schema:
-            $ref: '#/definitions/main.Products'
+            $ref: '#/definitions/model.Products'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/main.ErrorResponse'
+            $ref: '#/definitions/model.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Handler Get Products by id
@@ -212,25 +212,31 @@ paths:
         name: product
         required: true
         schema:
-          $ref: '#/definitions/main.Products'
+          $ref: '#/definitions/model.Products'
       produces:
       - application/json
       responses:
         "200":
           description: Updated product
           schema:
-            $ref: '#/definitions/main.Products'
+            $ref: '#/definitions/model.Products'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/main.ErrorResponse'
+            $ref: '#/definitions/model.ErrorResponse'
         "404":
           description: Product not found
           schema:
-            $ref: '#/definitions/main.ErrorResponse'
+            $ref: '#/definitions/model.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update product by id
       tags:
       - Products
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer {token}" to authorize.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
